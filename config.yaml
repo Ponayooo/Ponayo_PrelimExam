@@ -1,0 +1,61 @@
+---
+- hosts: all
+  become: true
+  tasks:
+
+  - name: install python3 and pip3 in Ubuntu
+    apt:
+      name:
+        - python3
+        - python3-pip
+      state: latest
+      update_cache: yes
+    when: ansible_distribution == "Ubuntu"
+
+  - name: install python3 in CentOS
+    dnf:
+      name:
+        - python3
+        - python3-pip
+      state: latest
+      use_backend: dnf4
+      update_cache: yes
+    when: ansible_distribution == "CentOS"
+
+  - name: install java in Ubuntu
+    apt:
+      name: openjdk-11-jre
+      state: latest
+      update_cache: yes
+    when: ansible_distribution == "Ubuntu"
+
+  - name: install java in CentOS
+    dnf:
+      name: java-11-openjdk
+      state: latest
+      update_cache: yes
+      use_backend: dnf4
+    when: ansible_distribution == "CentOS"
+
+  - name: Motd message
+    lineinfile:
+      path: /etc/motd
+      line: "{{ Hi! Welcome to Ansible Manage Node by Ponayo | default ('Ansible Managed Node by ' + ansible_user) }}"
+    register: motd_result
+    when: motd_message is defined
+
+  - name: Set Default Motd message
+    lineinfile:
+      path: /etc/motd
+      line: "Ansible  Manage Node by {{ ansible_user }}"
+    when: motd_message is not defined
+
+  - name: Display Motd result
+    debug:
+      msg: "{{ lookup('file','/etc/motd') }}"
+
+  - name: Create a new user
+    user:
+      name: "{{ new_username }}"
+      state: present
+    when: new_username is defined
